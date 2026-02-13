@@ -3,16 +3,16 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "portolake"
+name = "portolan-tui"
 version = "0.1.0"
-description = "Lakehouse-grade versioning for Portolan catalogs"
+description = "Interactive terminal UI for resolving manual issues from Portolan scan"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
 authors = [
     { name = "Nissim Lebovits", email = "nlebovits@pm.me" }
 ]
-keywords = ["geospatial", "data lake", "versioning", "catalog", "metadata", "lakehouse", "iceberg"]
+keywords = ["geospatial", "cli", "tui", "terminal", "interactive", "catalog", "metadata"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -23,21 +23,21 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: GIS",
+    "Environment :: Console",
 ]
 dependencies = [
     "click>=8.3.1",
-    "geoparquet-io>=0.9.0",
-    "pyarrow>=12.0.0,<22.0.0",  # v22+ has ABI incompatibility with abseil on some systems
+    "textual>=3.0.0",
 ]
 
-[project.entry-points."portolan.backends"]
-iceberg = "portolake:IcebergBackend"
+[project.entry-points."portolan.commands"]
+tui = "portolan_tui:tui_command_group"
 
 [project.urls]
-"Homepage" = "https://github.com/portolan-sdi/portolake"
-"Bug Tracker" = "https://github.com/portolan-sdi/portolake/issues"
-"Documentation" = "https://portolan-sdi.github.io/portolake/"
-"Source" = "https://github.com/portolan-sdi/portolake"
+"Homepage" = "https://github.com/portolan-sdi/portolan-tui"
+"Bug Tracker" = "https://github.com/portolan-sdi/portolan-tui/issues"
+"Documentation" = "https://portolan-sdi.github.io/portolan-tui/"
+"Source" = "https://github.com/portolan-sdi/portolan-tui"
 
 [project.optional-dependencies]
 dev = [
@@ -56,7 +56,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["portolake"]
+packages = ["portolan_tui"]
 
 # ---------- commitizen ----------
 
@@ -75,7 +75,7 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
-addopts = "-v --tb=short --cov=portolake --cov-report=term-missing --cov-fail-under=0"
+addopts = "-v --tb=short --cov=portolan_tui --cov-report=term-missing --cov-fail-under=0"
 markers = [
     "unit: Fast, isolated, no I/O (< 100ms each)",
     "integration: Multi-component, may touch filesystem",
@@ -85,10 +85,10 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["portolake"]
+source = ["portolan_tui"]
 branch = true
 omit = [
-    "portolake/__init__.py",
+    "portolan_tui/__init__.py",
 ]
 
 [tool.coverage.report]
@@ -127,7 +127,7 @@ ignore = [
 "__init__.py" = ["F401"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["portolake"]
+known-first-party = ["portolan_tui"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -138,6 +138,6 @@ docstring-code-format = true
 
 [tool.vulture]
 min_confidence = 80
-paths = ["portolake", "tests"]
+paths = ["portolan_tui", "tests"]
 sort_by_size = true
 verbose = false

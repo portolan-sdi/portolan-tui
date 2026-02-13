@@ -4,18 +4,33 @@
 
 <div align="center">
 
-[![CI](https://github.com/portolan-sdi/portolake/actions/workflows/ci.yml/badge.svg)](https://github.com/portolan-sdi/portolake/actions/workflows/ci.yml)
+[![CI](https://github.com/portolan-sdi/portolan-tui/actions/workflows/ci.yml/badge.svg)](https://github.com/portolan-sdi/portolan-tui/actions/workflows/ci.yml)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![PyPI version](https://badge.fury.io/py/portolake.svg)](https://badge.fury.io/py/portolake)
+[![PyPI version](https://badge.fury.io/py/portolan-tui.svg)](https://badge.fury.io/py/portolan-tui)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
 </div>
 
 ---
 
-Lakehouse-grade versioning plugin for [Portolan](https://github.com/portolan-sdi/portolan-cli).
+Interactive terminal UI plugin for [Portolan](https://github.com/portolan-sdi/portolan-cli).
 
-Portolake provides ACID transactions, concurrent writes, and time travel for Portolan catalogs using Apache Iceberg (vector data) and Icechunk (raster data).
+Portolan TUI provides an interactive terminal user interface for resolving manual issues identified by the `portolan scan` command without leaving the terminal environment.
+
+## Purpose
+
+The `portolan scan` command categorizes findings into three tiers:
+
+| Tier | Description | Resolution |
+|------|-------------|------------|
+| **Ready** | Fully automatable | Handled automatically |
+| **Safe fix** | Low-risk fixes | Apply with `--fix` flag |
+| **Manual** | Requires human judgment | **Use this TUI plugin** |
+
+**Portolan TUI** focuses on the **Manual** tier — issues that require human decision-making, such as:
+
+- **Ambiguous sidecar relationships** — When it's unclear which main file a sidecar belongs to
+- **Multi-asset directory splitting** — When multiple assets need to be separated into distinct directories
 
 ## Status
 
@@ -26,10 +41,10 @@ Portolake provides ACID transactions, concurrent writes, and time travel for Por
 ### Recommended: pipx (for global use)
 
 ```bash
-pipx install portolake
+pipx install portolan-tui
 ```
 
-This installs `portolake` in an isolated environment while making the command globally available.
+This installs `portolan-tui` in an isolated environment while making it available as a Portolan plugin.
 
 If you don't have pipx installed:
 ```bash
@@ -40,7 +55,7 @@ python3 -m pipx ensurepath
 ### Alternative: pip
 
 ```bash
-pip install portolake
+pip install portolan-tui
 ```
 
 **Note:** This installs into your global or user site-packages and may conflict with other packages.
@@ -50,35 +65,54 @@ pip install portolake
 Use [uv](https://github.com/astral-sh/uv) for local development:
 
 ```bash
-git clone https://github.com/portolan-sdi/portolake.git
-cd portolake
+git clone https://github.com/portolan-sdi/portolan-tui.git
+cd portolan-tui
 uv sync --all-extras
 ```
 
 ### Developing with portolan-cli
 
-To test portolake as a plugin alongside portolan-cli:
+To test portolan-tui as a plugin alongside portolan-cli:
 
 ```bash
 # From your portolan-cli directory
 cd path/to/portolan-cli
-uv pip install -e path/to/portolake
+uv pip install -e path/to/portolan-tui
 
 # Verify integration
-uv run python -c "
-from portolan_cli.backends import get_backend
-backend = get_backend('iceberg')
-print(f'Loaded: {backend.__class__.__name__}')
-"
+portolan tui --help
 ```
 
-Editable mode (`-e`) means changes to portolake take effect immediately.
+Editable mode (`-e`) means changes to portolan-tui take effect immediately.
 
 See [Contributing Guide](docs/contributing.md) for full development setup.
+
+## Usage
+
+```bash
+# Launch TUI to resolve manual issues in a directory
+portolan tui resolve /data
+
+# See available TUI commands
+portolan tui --help
+```
+
+## Key Features
+
+- **Interactive Resolution** — Navigate and resolve issues using keyboard shortcuts
+- **File Operations** — Execute file moves directly from the TUI based on your decisions
+- **Non-destructive** — Preview changes before applying; all operations are reversible
+- **Textual-based** — Modern terminal UI with mouse support
 
 ## Documentation
 
 - [Contributing Guide](docs/contributing.md)
+
+## Related
+
+- [portolan-cli](https://github.com/portolan-sdi/portolan-cli) — Main CLI (required)
+- [portolake](https://github.com/portolan-sdi/portolake) — Lakehouse versioning plugin
+- [Issue #68](https://github.com/portolan-sdi/portolan-cli/issues/68) — Original specification
 
 ## License
 

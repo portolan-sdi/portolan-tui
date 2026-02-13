@@ -1,22 +1,21 @@
-# Portolake - Development Guide
+# Portolan TUI - Development Guide
 
-## What is Portolake?
+## What is Portolan TUI?
 
-Portolake is a **plugin for [Portolan CLI](https://github.com/portolan-sdi/portolan-cli)** that provides lakehouse-grade versioning for geospatial catalogs. It's the enterprise-tier backend described in [ADR-0015](https://github.com/portolan-sdi/portolan-cli/blob/main/context/shared/adr/0015-two-tier-versioning-architecture.md).
+Portolan TUI is a **plugin for [Portolan CLI](https://github.com/portolan-sdi/portolan-cli)** that provides an interactive terminal user interface for resolving manual issues identified by `portolan scan`. It's the TUI companion described in [Issue #68](https://github.com/portolan-sdi/portolan-cli/issues/68).
 
 **Key concepts:**
-- **Apache Iceberg** — ACID transactions for tabular/vector data (GeoParquet format)
-- **Icechunk** — Time travel and versioning for array/raster data (COG, NetCDF, HDF, Zarr via VirtualiZarr)
+- **Textual** — Modern TUI framework for Python providing rich terminal interfaces
+- **Manual Issues** — Scan findings that require human decision-making (ambiguous relationships, multi-asset directories)
 - **Portolan** — The parent CLI that orchestrates format conversion and catalog management
 
-**What Portolake adds over Portolan's built-in versioning:**
-- ACID transactions enabling concurrent writes
-- Native time travel and version branching
-- Automated schema evolution detection
-- Garbage collection and snapshot management
-- Optimistic concurrency control
+**What Portolan TUI provides:**
+- Interactive resolution of ambiguous sidecar file relationships
+- Multi-asset directory splitting interface
+- File operation execution based on user decisions
+- Non-destructive preview mode before applying changes
 
-**Target users:** Organizations like Carto and HDX requiring multi-user access to geospatial catalogs.
+**Target users:** Anyone working with complex geospatial data directories where automated resolution isn't sufficient.
 
 ## Guiding Principle
 
@@ -29,10 +28,10 @@ AI agents will write most of the code. Human review does not scale to match AI o
 | Parent project | [portolan-cli](https://github.com/portolan-sdi/portolan-cli) |
 | Architecture decisions | [portolan-cli ADRs](https://github.com/portolan-sdi/portolan-cli/tree/main/context/shared/adr) |
 | Plugin architecture | [ADR-0003](https://github.com/portolan-sdi/portolan-cli/blob/main/context/shared/adr/0003-plugin-architecture.md) |
-| Two-tier versioning | [ADR-0015](https://github.com/portolan-sdi/portolan-cli/blob/main/context/shared/adr/0015-two-tier-versioning-architecture.md) |
-| Iceberg as plugin | [ADR-0004](https://github.com/portolan-sdi/portolan-cli/blob/main/context/shared/adr/0004-iceberg-as-plugin.md) |
+| Scan triage output | [Issue #66](https://github.com/portolan-sdi/portolan-cli/issues/66) |
+| TUI specification | [Issue #68](https://github.com/portolan-sdi/portolan-cli/issues/68) |
 
-**Target Python version:** 3.11+ (matches pyarrow/iceberg requirements)
+**Target Python version:** 3.11+ (matches portolan-cli requirements)
 
 ## Common Commands
 
@@ -47,19 +46,27 @@ uv run pytest -m unit                   # Run only unit tests
 uv run pytest --cov-report=html         # Coverage report
 uv run ruff check .                     # Lint
 uv run ruff format .                    # Format
-uv run vulture portolake tests          # Dead code
-uv run xenon --max-absolute=C portolake # Complexity
+uv run vulture portolan_tui tests       # Dead code
+uv run xenon --max-absolute=C portolan_tui # Complexity
 
 # Commits (use commitizen for conventional commits)
 uv run cz commit                        # Interactive commit
 uv run cz bump --dry-run                # Preview version bump
+
+# Running the TUI locally
+uv run textual run portolan_tui:app     # Run TUI directly for testing
 ```
 
 ## Project Structure
 
 ```
-portolake/
-├── portolake/             # Source code
+portolan-tui/
+├── portolan_tui/          # Source code
+│   ├── __init__.py        # CLI entry point and exports
+│   ├── app.py             # Main Textual application
+│   ├── screens/           # TUI screens (resolve, preview, etc.)
+│   ├── widgets/           # Custom Textual widgets
+│   └── models/            # Data models for issues and resolutions
 ├── tests/                 # Test suite
 └── .github/workflows/     # CI/CD pipelines
 ```
@@ -133,7 +140,7 @@ BREAKING CHANGE: ...              # Major version bump
 
 ### Release Automation
 
-Portolake uses a **tag-based release workflow**. See `.github/workflows/release.yml`.
+Portolan TUI uses a **tag-based release workflow**. See `.github/workflows/release.yml`.
 
 **To release:**
 1. Create a PR that runs `uv run cz bump --changelog`
@@ -149,15 +156,37 @@ Portolake uses a **tag-based release workflow**. See `.github/workflows/release.
 
 | Library | Purpose | Docs |
 |---------|---------|------|
-| [Apache Iceberg](https://iceberg.apache.org/) | Table format for vector data | [PyIceberg](https://py.iceberg.apache.org/) |
-| [Icechunk](https://github.com/earth-mover/icechunk) | Zarr-compatible versioned storage | [Docs](https://icechunk.io/) |
-| [geoparquet-io](https://github.com/geoparquet/geoparquet-io) | GeoParquet I/O | GitHub |
+| [Textual](https://textual.textualize.io/) | TUI framework | [Docs](https://textual.textualize.io/) |
+| [Click](https://click.palletsprojects.com/) | CLI integration | [Docs](https://click.palletsprojects.com/) |
 
 ## Design Principles
 
 | Principle | Meaning |
 |-----------|---------|
-| **Plugin, not standalone** | Portolake extends Portolan; it doesn't replace it |
-| **Delegate to specialists** | Iceberg handles transactions, Icechunk handles arrays |
+| **Plugin, not standalone** | Portolan TUI extends Portolan; it doesn't replace it |
+| **Interactive complement** | Handles what `--fix` cannot automate |
+| **Non-destructive by default** | Preview changes before applying |
+| **Keyboard-first** | Full keyboard navigation for efficiency |
 | **YAGNI** | No speculative features; complexity is expensive |
-| **Concurrent-first** | Design for multi-user from the start |
+
+## Textual Development Notes
+
+### Testing TUI Components
+
+Textual provides a testing framework using `pilot`:
+
+```python
+from textual.pilot import Pilot
+
+async def test_app_startup():
+    async with App().run_test() as pilot:
+        # Test interactions
+        await pilot.press("q")  # Quit
+```
+
+### Common Patterns
+
+- **Screens** — Use `Screen` classes for distinct views (resolve, preview)
+- **Widgets** — Custom widgets for issue display, file trees
+- **Actions** — Define actions with `@on` decorators
+- **CSS** — Textual uses CSS for styling (put in `.tcss` files)

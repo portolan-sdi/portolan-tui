@@ -1,103 +1,95 @@
-"""Tests for portolake entry point registration and IcebergBackend discoverability.
+"""Tests for portolan-tui entry point registration and command group discoverability.
 
-These tests verify that portolake correctly registers as a portolan-cli backend
+These tests verify that portolan-tui correctly registers as a portolan-cli command
 plugin via Python's entry_points mechanism.
 
-See: https://github.com/portolan-sdi/portolake/issues/2
+See: https://github.com/portolan-sdi/portolan-cli/issues/68
 """
 
 from importlib.metadata import entry_points
 
 import pytest
+from click.testing import CliRunner
 
 
 @pytest.mark.unit
-def test_backend_is_discoverable():
-    """Verify portolake registers correctly as a portolan backend.
+def test_command_is_discoverable():
+    """Verify portolan-tui registers correctly as a portolan command.
 
-    The entry point must be registered under the 'portolan.backends' group
-    with the name 'iceberg'.
+    The entry point must be registered under the 'portolan.commands' group
+    with the name 'tui'.
     """
-    eps = entry_points(group="portolan.backends")
+    eps = entry_points(group="portolan.commands")
     names = [ep.name for ep in eps]
 
-    assert "iceberg" in names, f"Expected 'iceberg' in {names}"
+    assert "tui" in names, f"Expected 'tui' in {names}"
 
 
 @pytest.mark.unit
-def test_backend_loads():
-    """Verify the backend class can be loaded from the entry point."""
-    eps = entry_points(group="portolan.backends")
-    iceberg_ep = next((ep for ep in eps if ep.name == "iceberg"), None)
+def test_command_loads():
+    """Verify the command group can be loaded from the entry point."""
+    eps = entry_points(group="portolan.commands")
+    tui_ep = next((ep for ep in eps if ep.name == "tui"), None)
 
-    assert iceberg_ep is not None, "Entry point 'iceberg' not found"
+    assert tui_ep is not None, "Entry point 'tui' not found"
 
-    backend_class = iceberg_ep.load()
-    assert backend_class.__name__ == "IcebergBackend"
-
-
-@pytest.mark.unit
-def test_backend_instantiates():
-    """Verify the backend class can be instantiated."""
-    from portolake import IcebergBackend
-
-    backend = IcebergBackend()
-    assert backend is not None
+    command_group = tui_ep.load()
+    assert command_group.name == "tui"
 
 
 @pytest.mark.unit
-def test_backend_has_required_methods():
-    """Verify the backend has all required VersioningBackend protocol methods."""
-    from portolake import IcebergBackend
+def test_tui_command_group_importable():
+    """Verify tui_command_group can be imported directly from portolan_tui."""
+    from portolan_tui import tui_command_group
 
-    backend = IcebergBackend()
-
-    # All 6 protocol methods from VersioningBackend
-    required_methods = [
-        "get_current_version",
-        "list_versions",
-        "publish",
-        "rollback",
-        "prune",
-        "check_drift",
-    ]
-
-    for method_name in required_methods:
-        assert hasattr(backend, method_name), f"Missing method: {method_name}"
-        assert callable(getattr(backend, method_name)), f"Not callable: {method_name}"
+    assert tui_command_group is not None
+    assert tui_command_group.name == "tui"
 
 
 @pytest.mark.unit
-def test_backend_methods_raise_not_implemented():
-    """Verify stub methods raise NotImplementedError with descriptive messages."""
-    from portolake import IcebergBackend
+def test_tui_command_group_has_resolve():
+    """Verify the tui command group has the resolve subcommand."""
+    from portolan_tui import tui_command_group
 
-    backend = IcebergBackend()
-
-    # Test each method raises NotImplementedError
-    with pytest.raises(NotImplementedError, match="get_current_version"):
-        backend.get_current_version("test-collection")
-
-    with pytest.raises(NotImplementedError, match="list_versions"):
-        backend.list_versions("test-collection")
-
-    with pytest.raises(NotImplementedError, match="publish"):
-        backend.publish("test-collection", {}, {}, False, "test")
-
-    with pytest.raises(NotImplementedError, match="rollback"):
-        backend.rollback("test-collection", "1.0.0")
-
-    with pytest.raises(NotImplementedError, match="prune"):
-        backend.prune("test-collection", 5, True)
-
-    with pytest.raises(NotImplementedError, match="check_drift"):
-        backend.check_drift("test-collection")
+    command_names = list(tui_command_group.commands)
+    assert "resolve" in command_names
 
 
 @pytest.mark.unit
-def test_iceberg_backend_importable_from_package():
-    """Verify IcebergBackend can be imported directly from portolake."""
-    from portolake import IcebergBackend
+def test_resolve_command_help():
+    """Verify the resolve command shows help text."""
+    from portolan_tui import tui_command_group
 
-    assert IcebergBackend is not None
-    assert IcebergBackend.__name__ == "IcebergBackend"
+    runner = CliRunner()
+    result = runner.invoke(tui_command_group, ["resolve", "--help"])
+
+    assert result.exit_code == 0
+    assert "Launch interactive resolution interface" in result.output
+    assert "PATH" in result.output
+
+
+@pytest.mark.unit
+def test_resolve_command_requires_path():
+    """Verify the resolve command requires a path argument."""
+    from portolan_tui import tui_command_group
+
+    runner = CliRunner()
+    result = runner.invoke(tui_command_group, ["resolve"])
+
+    assert result.exit_code != 0
+    assert "Missing argument" in result.output
+
+
+@pytest.mark.unit
+def test_resolve_command_not_implemented(tmp_path):
+    """Verify the resolve command raises NotImplementedError (stub behavior)."""
+    from portolan_tui import tui_command_group
+
+    runner = CliRunner()
+    result = runner.invoke(tui_command_group, ["resolve", str(tmp_path)])
+
+    # NotImplementedError should cause non-zero exit
+    assert result.exit_code != 0
+    # The exception is stored in result.exception, not output
+    assert isinstance(result.exception, NotImplementedError)
+    assert "not yet implemented" in str(result.exception)

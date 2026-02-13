@@ -1,6 +1,6 @@
-# Contributing to Portolake
+# Contributing to Portolan TUI
 
-Thank you for your interest in contributing to Portolake!
+Thank you for your interest in contributing to Portolan TUI!
 
 > **For AI agents and detailed development guidelines:** See `CLAUDE.md` in the project root. This document is for human contributors and covers workflow, not implementation details.
 
@@ -8,8 +8,8 @@ Thank you for your interest in contributing to Portolake!
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/portolan-sdi/portolake.git
-   cd portolake
+   git clone https://github.com/portolan-sdi/portolan-tui.git
+   cd portolan-tui
    ```
 
 2. **Install uv** (if not already installed)
@@ -36,8 +36,8 @@ Thank you for your interest in contributing to Portolake!
 
 ### Branch Naming
 
-- Feature: `feature/description` (e.g., `feature/add-iceberg-support`)
-- Bug fix: `fix/description` (e.g., `fix/transaction-rollback`)
+- Feature: `feature/description` (e.g., `feature/add-sidecar-resolution`)
+- Bug fix: `fix/description` (e.g., `fix/keyboard-navigation`)
 - Documentation: `docs/description` (e.g., `docs/update-readme`)
 
 ### Commit Messages
@@ -110,12 +110,23 @@ uv run pytest
 uv run pytest -m unit
 
 # With coverage report
-uv run pytest --cov=portolake --cov-report=html
+uv run pytest --cov=portolan_tui --cov-report=html
+```
+
+### Testing TUI Components
+
+Textual provides a testing framework for async TUI testing:
+
+```python
+async def test_my_widget():
+    async with MyApp().run_test() as pilot:
+        await pilot.press("enter")
+        # assertions...
 ```
 
 ## Release Process
 
-Portolake uses a **tag-based release workflow**:
+Portolan TUI uses a **tag-based release workflow**:
 
 1. **Accumulate changes** — Merge PRs to `main` as normal using conventional commits
 2. **Prepare a release** — When ready to release, create a PR that bumps the version:
